@@ -31,14 +31,11 @@ if (mode === 'webhook') {
 }
 
 // Graceful shutdown
-process.on('SIGINT', () => {
+function gracefulShutdown() {
   console.log('\nShutting down...');
   db.close();
   process.exit(0);
-});
+}
 
-process.on('SIGTERM', () => {
-  console.log('\nShutting down...');
-  db.close();
-  process.exit(0);
-});
+process.on('SIGINT', gracefulShutdown);
+process.on('SIGTERM', gracefulShutdown);
