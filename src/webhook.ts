@@ -1,12 +1,47 @@
 import express, { Request, Response } from 'express';
+import { createHmac } from 'crypto';
 import { GitHubMemoryDB } from './database.js';
+
+export interface PullRequestPayload {
+  id: number;
+  number: number;
+  title: string;
+  body: string | null;
+  state: string;
+  user?: {
+    login: string;
+  };
+  html_url: string;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface CommitPayload {
+  id: string;
+  message: string;
+  author?: {
+    username?: string;
+    name?: string;
+  };
+  url: string;
+  timestamp: string;
+}
+
+export interface RepositoryPayload {
+  full_name: string;
+}
+
+export interface SenderPayload {
+  login: string;
+  id: number;
+}
 
 export interface WebhookEvent {
   action?: string;
-  pull_request?: any;
-  commits?: any[];
-  repository?: any;
-  sender?: any;
+  pull_request?: PullRequestPayload;
+  commits?: CommitPayload[];
+  repository?: RepositoryPayload;
+  sender?: SenderPayload;
 }
 
 export class WebhookHandler {
@@ -23,7 +58,36 @@ export class WebhookHandler {
   }
 
   private setupMiddleware(): void {
-    this.app.use(express.json());
+    // Store raw body for signature verification
+    if (this.webhookSecret) {
+      this.app.use('/webhook', express.json({
+        verify: (req: any, res, buf) => {
+          req.rawBody = buf.toString('utf8');
+        }
+      }));
+      
+      // Verify webhook signature
+      this.app.use('/webhook', (req: Request, res: Response, next) => {
+        const signature = req.headers['x-hub-signature-256'] as string;
+        if (!signature) {
+          res.status(401).json({ error: 'No signature provided' });
+          return;
+        }
+
+        const rawBody = (req as any).rawBody;
+        const hmac = createHmac('sha256', this.webhookSecret!);
+        const digest = 'sha256=' + hmac.update(rawBody).digest('hex');
+
+        if (signature !== digest) {
+          res.status(401).json({ error: 'Invalid signature' });
+          return;
+        }
+
+        next();
+      });
+    } else {
+      this.app.use(express.json());
+    }
   }
 
   private setupRoutes(): void {
@@ -47,10 +111,10 @@ export class WebhookHandler {
 
       switch (event) {
         case 'pull_request':
-          this.handlePullRequestEvent(payload);
+          await this.handlePullRequestEvent(payload);
           break;
         case 'push':
-          this.handlePushEvent(payload);
+          await this.handlePushEvent(payload);
           break;
         default:
           console.log(`Ignoring event type: ${event}`);
@@ -63,7 +127,7 @@ export class WebhookHandler {
     }
   }
 
-  private handlePullRequestEvent(payload: WebhookEvent): void {
+  private async handlePullRequestEvent(payload: WebhookEvent): Promise<void> {
     if (!payload.pull_request || !payload.repository) {
       console.log('Missing pull_request or repository data');
       return;
@@ -88,7 +152,7 @@ export class WebhookHandler {
     console.log(`Indexed PR #${pr.number} from ${repo.full_name}`);
   }
 
-  private handlePushEvent(payload: WebhookEvent): void {
+  private async handlePushEvent(payload: WebhookEvent): Promise<void> {
     if (!payload.commits || !payload.repository) {
       console.log('Missing commits or repository data');
       return;

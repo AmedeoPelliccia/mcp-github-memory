@@ -235,6 +235,6 @@ export class MCPServer {
   async start(): Promise<void> {
     const transport = new StdioServerTransport();
     await this.server.connect(transport);
-    console.error('MCP GitHub Memory server running on stdio');
+    console.log('MCP GitHub Memory server running on stdio');
   }
 }

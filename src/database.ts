@@ -1,5 +1,5 @@
 import Database from 'better-sqlite3';
-import { join } from 'path';
+import { join, dirname } from 'path';
 import { existsSync, mkdirSync } from 'fs';
 
 export interface PullRequest {
@@ -29,7 +29,7 @@ export class GitHubMemoryDB {
 
   constructor(dbPath: string = './github-memory.db') {
     // Ensure directory exists
-    const dbDir = join(dbPath, '..');
+    const dbDir = dirname(dbPath);
     if (!existsSync(dbDir)) {
       mkdirSync(dbDir, { recursive: true });
     }
@@ -90,7 +90,7 @@ export class GitHubMemoryDB {
 
   searchPullRequests(query: string, repository?: string, author?: string, state?: string): PullRequest[] {
     let sql = 'SELECT * FROM pull_requests WHERE 1=1';
-    const params: any[] = [];
+    const params: (string | number)[] = [];
 
     if (query) {
       sql += ' AND (title LIKE ? OR body LIKE ?)';
@@ -135,7 +135,7 @@ export class GitHubMemoryDB {
 
   searchCommits(query: string, repository?: string, author?: string): Commit[] {
     let sql = 'SELECT * FROM commits WHERE 1=1';
-    const params: any[] = [];
+    const params: (string | number)[] = [];
 
     if (query) {
       sql += ' AND message LIKE ?';
