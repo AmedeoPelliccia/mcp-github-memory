@@ -1,5 +1,5 @@
 import Database from 'better-sqlite3';
-import { join, dirname } from 'path';
+import { dirname } from 'path';
 import { existsSync, mkdirSync } from 'fs';
 
 export interface PullRequest {
