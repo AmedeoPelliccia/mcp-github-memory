@@ -1,0 +1,14 @@
+{
+  "mcpServers": {
+    "github-memory": {
+      "command": "node",
+      "args": [
+        "/absolute/path/to/mcp-github-memory/dist/index.js",
+        "mcp"
+      ],
+      "env": {
+        "GITHUB_MEMORY_DB_PATH": "/path/to/github-memory.db"
+      }
+    }
+  }
+}

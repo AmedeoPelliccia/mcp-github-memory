@@ -1,0 +1,38 @@
+{
+  "name": "mcp-github-memory",
+  "version": "1.0.0",
+  "description": "MCP server that indexes GitHub PRs and commits for searchability by AI assistants",
+  "type": "module",
+  "main": "dist/src/index.js",
+  "bin": {
+    "mcp-github-memory": "dist/src/index.js"
+  },
+  "scripts": {
+    "build": "tsc",
+    "watch": "tsc --watch",
+    "start": "node dist/src/index.js",
+    "dev": "tsc && node dist/src/index.js",
+    "pretest": "tsc",
+    "test": "node --test dist/tests/database.test.js"
+  },
+  "keywords": [
+    "mcp",
+    "github",
+    "memory",
+    "context",
+    "webhook"
+  ],
+  "author": "Amedeo Pelliccia",
+  "license": "MIT",
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.0.0",
+    "better-sqlite3": "^11.0.0",
+    "express": "^4.18.0"
+  },
+  "devDependencies": {
+    "@types/better-sqlite3": "^7.6.0",
+    "@types/express": "^4.17.0",
+    "@types/node": "^20.0.0",
+    "typescript": "^5.3.0"
+  }
+}
