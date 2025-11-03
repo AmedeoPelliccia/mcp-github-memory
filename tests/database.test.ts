@@ -2,8 +2,10 @@ import { describe, it } from 'node:test';
 import assert from 'node:assert';
 import { GitHubMemoryDB } from '../src/database.js';
 import { unlinkSync } from 'fs';
+import * as os from 'os';
+import * as path from 'path';
 
-const TEST_DB_PATH = '/tmp/test-github-memory-' + Date.now() + '.db';
+const TEST_DB_PATH = path.join(os.tmpdir(), 'test-github-memory-' + Date.now() + '.db');
 
 describe('GitHubMemoryDB', () => {
   it('should create database and initialize schema', () => {
