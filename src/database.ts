@@ -78,6 +78,11 @@ export class GitHubMemoryDB {
     `);
   }
 
+  // Helper function to escape SQL wildcard characters in LIKE patterns
+  private escapeLikePattern(str: string): string {
+    return str.replace(/[%_]/g, '\\$&');
+  }
+
   // Pull Request operations
   insertPullRequest(pr: PullRequest): void {
     const stmt = this.db.prepare(`
@@ -93,8 +98,9 @@ export class GitHubMemoryDB {
     const params: (string | number)[] = [];
 
     if (query) {
-      sql += ' AND (title LIKE ? OR body LIKE ?)';
-      params.push(`%${query}%`, `%${query}%`);
+      sql += ' AND (title LIKE ? ESCAPE \'\\\' OR body LIKE ? ESCAPE \'\\\')';
+      const escapedQuery = this.escapeLikePattern(query);
+      params.push(`%${escapedQuery}%`, `%${escapedQuery}%`);
     }
 
     if (repository) {
@@ -138,8 +144,9 @@ export class GitHubMemoryDB {
     const params: (string | number)[] = [];
 
     if (query) {
-      sql += ' AND message LIKE ?';
-      params.push(`%${query}%`);
+      sql += ' AND message LIKE ? ESCAPE \'\\\'';
+      const escapedQuery = this.escapeLikePattern(query);
+      params.push(`%${escapedQuery}%`);
     }
 
     if (repository) {

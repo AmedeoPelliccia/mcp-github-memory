@@ -1,5 +1,5 @@
 import express, { Request, Response } from 'express';
-import { createHmac } from 'crypto';
+import { createHmac, timingSafeEqual } from 'crypto';
 import { GitHubMemoryDB } from './database.js';
 
 export interface PullRequestPayload {
@@ -78,7 +78,12 @@ export class WebhookHandler {
         const hmac = createHmac('sha256', this.webhookSecret!);
         const digest = 'sha256=' + hmac.update(rawBody).digest('hex');
 
-        if (signature !== digest) {
+        // Use timing-safe comparison to prevent timing attacks
+        const signatureBuffer = Buffer.from(signature);
+        const digestBuffer = Buffer.from(digest);
+        
+        if (signatureBuffer.length !== digestBuffer.length || 
+            !timingSafeEqual(signatureBuffer, digestBuffer)) {
           res.status(401).json({ error: 'Invalid signature' });
           return;
         }
